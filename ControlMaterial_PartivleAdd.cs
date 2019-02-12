@@ -52,7 +52,7 @@ public class ControlMaterial_PartivleAdd : MonoBehaviour {
 	/******************************
 	******************************/
 	void Update () {
-		test();
+		// test();
 	}
 	
 	/******************************

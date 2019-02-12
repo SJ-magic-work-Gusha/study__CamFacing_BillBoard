@@ -49,6 +49,8 @@ public class CamFacing_BillBoard : MonoBehaviour {
 	private Transform _transform;
 	private Transform _cameraTransform;
 	private Quaternion _initialRotation;
+	
+	private bool b_rotX = false;
 
 
 	/****************************************
@@ -75,10 +77,28 @@ public class CamFacing_BillBoard : MonoBehaviour {
 	{
 		/********************
 		********************/
+		if(Input.GetKeyDown(KeyCode.Alpha0))		b_rotX = true;
+		else if(Input.GetKeyDown(KeyCode.Alpha1))	b_rotX = false;
+		
+		/********************
+		********************/
+		Vector3 LastTransform_fwd = _transform.forward;
+		Quaternion LastTransform_rot = _transform.rotation;
+		
+		/********************
+		********************/
 		float T = 10.0f;
-		float rot_x = 0; //60 * Mathf.Cos(2 * Mathf.PI * (Time.realtimeSinceStartup - 0.0f/360f * T) / T);
-		float rot_z = 60 * Mathf.Sin(2 * Mathf.PI * (Time.realtimeSinceStartup - 0.0f/360f * T) / T);
-
+		float rot_x;
+		float rot_z;
+		
+		if(b_rotX){
+			rot_x = 60 * Mathf.Cos(2 * Mathf.PI * (Time.realtimeSinceStartup - 0.0f/360f * T) / T);
+			rot_z = 0; // 60 * Mathf.Sin(2 * Mathf.PI * (Time.realtimeSinceStartup - 0.0f/360f * T) / T);
+		}else{
+			rot_x = 0; // 60 * Mathf.Cos(2 * Mathf.PI * (Time.realtimeSinceStartup - 0.0f/360f * T) / T);
+			rot_z = 60 * Mathf.Sin(2 * Mathf.PI * (Time.realtimeSinceStartup - 0.0f/360f * T) / T);
+		}
+		
 		Quaternion AnimRot = Quaternion.Euler(rot_x, 0, rot_z);
 		
 		// _initialRotationで、座標系をSceneViewで調整したinitialの姿勢へ
@@ -90,14 +110,16 @@ public class CamFacing_BillBoard : MonoBehaviour {
 		********************/
 		Vector3 direction = _cameraTransform.position - _transform.position;
 		float dot = Vector3.Dot(direction, _transform.forward);
-		if(dot == 0){
-			// No touch. Invisible angle.
-			return;
-		}
 		
-		Vector3 fwd = Vector3.ProjectOnPlane(direction, _transform.up);
+		Vector3 fwd;
+		if(dot == 0){
+			fwd = LastTransform_fwd; // 射影してfwd vectorを算出することができないので、前回値を使用.
+		}else{
+			fwd = Vector3.ProjectOnPlane(direction, _transform.up);
+		}
 		Quaternion q_Final = Quaternion.LookRotation(fwd, _transform.up); // forwardとupを決めると、(直交)座標系は1意に決まる.
 		
-		_transform.rotation = q_Final; // Globalで計算しているので、localRotation ではない点に注意.
+		// _transform.rotation = q_Final; // Globalで計算しているので、localRotation ではない点に注意.
+		_transform.rotation = Quaternion.Slerp(LastTransform_rot, q_Final, 0.4f); // Globalで計算しているので、localRotation ではない点に注意.
 	}
 }
